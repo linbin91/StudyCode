@@ -1,0 +1,64 @@
+今天主要看了android 仿淘宝、京东商品详情页 向上拖动查看图文详情控件
+
+
+学习到的东西
+
+① viewgroup 排列
+ @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        measureChildren(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        int childCount = getChildCount();
+        int childTop = 0;
+        for (int i = 0; i < childCount; i++) {
+            View child = getChildAt(i);
+            child.layout(l, childTop, r, childTop + child.getMeasuredHeight());
+            childTop += child.getMeasuredHeight();
+        }
+    }
+
+② scroller
+
+    Scroller scroller = new Scroller(getContext());
+
+    //通过Scroller实现弹性滑动
+    private void smoothScroll(int tartY) {
+        int dy = tartY - getScrollY();
+        scroller.startScroll(getScrollX(), getScrollY(), 0, dy);
+        invalidate();
+    }
+
+     @Override
+        public void computeScroll() {
+            if (scroller.computeScrollOffset()) {
+                scrollTo(scroller.getCurrX(), scroller.getCurrY());
+                postInvalidate();
+            }
+      }
+
+③ 判断滑动的是否决定了后续的操作
+    velocityTracker.computeCurrentVelocity(1000);
+                float yVelocity = velocityTracker.getYVelocity();
+
+                if (currPosition == 0) {
+                    if (yVelocity < 0 && yVelocity < -speed) {
+                        smoothScroll(position1Y);
+                        currPosition = 1;
+                    } else {
+                        smoothScroll(0);
+                    }
+                } else {
+                    if (yVelocity > 0 && yVelocity > speed) {
+                        smoothScroll(0);
+                        currPosition = 0;
+                    } else {
+                        smoothScroll(position1Y);
+                    }
+                }
+
+④滑动的事件
+
