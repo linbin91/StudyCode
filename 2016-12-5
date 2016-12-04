@@ -1,0 +1,68 @@
+①View 事件传递
+
+    某个View，一旦决拦截，那么这个事件序列都只能由它来处理，并且它的OnInterceptTouchEvent
+    不会再被调用。
+
+②
+在自定义Behavior的时候，我们需要关心的两组四个方法，为什么分为两组呢？看一下下面两种情况
+
+某个view监听另一个view的状态变化，例如大小、位置、显示状态等
+某个view监听CoordinatorLayout里的滑动状态x
+
+对于第一种情况，我们关心的是：
+layoutDependsOn和onDependentViewChanged方法，
+对于第二种情况，我们关心的是：
+onStartNestedScroll和onNestedPreScroll方法。
+对于这几个方法什么意思，我们需要干什么，稍候我们就能了解到
+
+③
+监听布局变化
+
+  final ViewTreeObserver vto = getViewTreeObserver();
+        vto.addOnPreDrawListener(mOnPreDrawListener);
+
+
+
+
+④Scorll 边界检测
+
+
+		public void fling(int velocityY)
+{
+    mScroller.fling(0, getScrollY(), 0, velocityY, 0, 0, 0, mTopViewHeight);
+    invalidate();
+}
+
+@Override
+public void scrollTo(int x, int y)
+{
+    if (y < 0)
+    {
+        y = 0;
+    }
+    if (y > mTopViewHeight)
+    {
+        y = mTopViewHeight;
+    }
+    if (y != getScrollY())
+    {
+        super.scrollTo(x, y);
+    }
+}
+
+
+⑤ popWindows 的 build 的模式
+
+
+⑥ 反射机制
+
+if (c == null) {
+                final Class<Behavior> clazz = (Class<Behavior>) Class.forName(fullName, true,
+                        context.getClassLoader());
+                c = clazz.getConstructor(CONSTRUCTOR_PARAMS);
+                c.setAccessible(true);
+                constructors.put(fullName, c);
+            }
+            return c.newInstance(context, attrs);
+
+
