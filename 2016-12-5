@@ -1,68 +1,182 @@
-①View 事件传递
+1. 内部类
 
-    某个View，一旦决拦截，那么这个事件序列都只能由它来处理，并且它的OnInterceptTouchEvent
-    不会再被调用。
+    非静态内部类的成员可以访问外部类的private成员，，反过来就是不成立的。
+    如果外部类需要访问非静态内部类的成员，则必须显示创建非静态内部类对象来调用访问其成员变量
 
-②
-在自定义Behavior的时候，我们需要关心的两组四个方法，为什么分为两组呢？看一下下面两种情况
+    new Inner().inProp
+2.  静态类内部类
 
-某个view监听另一个view的状态变化，例如大小、位置、显示状态等
-某个view监听CoordinatorLayout里的滑动状态x
+    静态内部类的实例方法不能访问外部类的实例成员，只能访问外部类的静态成员
 
-对于第一种情况，我们关心的是：
-layoutDependsOn和onDependentViewChanged方法，
-对于第二种情况，我们关心的是：
-onStartNestedScroll和onNestedPreScroll方法。
-对于这几个方法什么意思，我们需要干什么，稍候我们就能了解到
+3. 判断scollview的子view是否已经到达了屏幕一半位置
 
-③
-监听布局变化
+private void onScrollChanged(int top) {
+        int scrollViewHeight = getHeight();
+        int scrollViewBottom = getAbsoluteBottom();
+        int scrollViewHalfHeight = scrollViewHeight / 2;
 
-  final ViewTreeObserver vto = getViewTreeObserver();
-        vto.addOnPreDrawListener(mOnPreDrawListener);
-
-
-
-
-④Scorll 边界检测
-
-
-		public void fling(int velocityY)
-{
-    mScroller.fling(0, getScrollY(), 0, velocityY, 0, 0, 0, mTopViewHeight);
-    invalidate();
-}
-
-@Override
-public void scrollTo(int x, int y)
-{
-    if (y < 0)
-    {
-        y = 0;
-    }
-    if (y > mTopViewHeight)
-    {
-        y = mTopViewHeight;
-    }
-    if (y != getScrollY())
-    {
-        super.scrollTo(x, y);
-    }
-}
-
-
-⑤ popWindows 的 build 的模式
-
-
-⑥ 反射机制
-
-if (c == null) {
-                final Class<Behavior> clazz = (Class<Behavior>) Class.forName(fullName, true,
-                        context.getClassLoader());
-                c = clazz.getConstructor(CONSTRUCTOR_PARAMS);
-                c.setAccessible(true);
-                constructors.put(fullName, c);
+        // starts at 1 because the first View is a static non Discrollvable
+        // view.
+        for(int index = 1; index < mContent.getChildCount() ; index++) {
+            View child = mContent.getChildAt(index);
+            if(! (child instanceof Discrollvable)) {
+                //it's a static view, doesn't care about
+                continue;
             }
-            return c.newInstance(context, attrs);
+            Discrollvable discrollvable = (Discrollvable) child;
+            int discrollvableTop = child.getTop();
+            int discrollvableHeight = child.getHeight();
+            int discrollvableAbsoluteTop = discrollvableTop - top;
+            if (index == 1){
+                Log.e("linbin","top =" + top);
+                Log.e("linbin","scrollViewBottom =" + scrollViewBottom);
+                Log.e("linbin","child.getBottom() =" + child.getBottom());
+                Log.e("linbin","scrollViewHalfHeight =" + scrollViewHalfHeight);
+                Log.e("linbin","child.getTop() =" + child.getTop());
+            }
 
+            //the Discrollvable is too big to be discrollved when its center is reached
+            //the Discrollvable center. Discrollve it by its top.
+            if(scrollViewBottom - child.getBottom() < discrollvableHeight + scrollViewHalfHeight) {
+                if (index == 1){
+                    Log.e("linbin","11111");
+                }
 
+                //the Discrollvable top reaches the DiscrollView bottom
+                if(discrollvableAbsoluteTop <= scrollViewHeight) {
+                    if (index == 1){
+                        Log.e("linbin","22222");
+                    }
+
+                    int visibleGap = scrollViewHeight - discrollvableAbsoluteTop;
+                    discrollvable.onDiscrollve(clamp(visibleGap / (float) discrollvableHeight, 0.0f, 1.0f));
+                } else {
+                    if (index == 1){
+                        Log.e("linbin","33333");
+                    }
+
+                    discrollvable.onResetDiscrollve();
+                }
+            } else {
+                if (index == 1){
+                    Log.e("linbin","44444");
+                }
+
+                if(discrollvableAbsoluteTop <= scrollViewHalfHeight) {
+                    if (index == 1){
+                        Log.e("linbin","5555");
+                    }
+
+                    //the Discrollvable center reaches the DiscrollView center
+                    int visibleGap = scrollViewHalfHeight - discrollvableAbsoluteTop;
+                    discrollvable.onDiscrollve(clamp(visibleGap / (float) discrollvableHeight, 0.0f, 1.0f));
+                } else {
+                    if (index == 1){
+                        Log.e("linbin","666666");
+                    }
+
+                    discrollvable.onResetDiscrollve();
+                }
+            }
+        }
+    }
+
+3. view 进一步包装，动画
+
+public class DiscrollViewContent extends LinearLayout {
+
+    public DiscrollViewContent(Context context) {
+        super(context);
+        setOrientation(VERTICAL);
+    }
+
+    public DiscrollViewContent(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        setOrientation(VERTICAL);
+    }
+
+    public DiscrollViewContent(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        setOrientation(VERTICAL);
+    }
+
+    @Override
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        super.addView(asDiscrollvable(child, (LayoutParams) params), index, params);
+    }
+
+    private View asDiscrollvable(View child, LayoutParams lp) {
+        if(! isDiscrollvable(lp)) {
+            return child;
+        }
+        DiscrollvableView discrollvableChild = new DiscrollvableView(getContext());
+        discrollvableChild.setDiscrollveAlpha(lp.mDiscrollveAlpha);
+        discrollvableChild.setDiscrollveTranslation(lp.mDiscrollveTranslation);
+        discrollvableChild.setDiscrollveScaleX(lp.mDiscrollveScaleX);
+        discrollvableChild.setDiscrollveScaleY(lp.mDiscrollveScaleY);
+        discrollvableChild.setDiscrollveThreshold(lp.mDiscrollveThreshold);
+        discrollvableChild.setDiscrollveFromBgColor(lp.mDiscrollveFromBgColor);
+        discrollvableChild.setDiscrollveToBgColor(lp.mDiscrollveToBgColor);
+        discrollvableChild.addView(child);
+        return discrollvableChild;
+    }
+
+    private boolean isDiscrollvable(LayoutParams lp) {
+        return lp.mDiscrollveAlpha ||
+               lp.mDiscrollveTranslation != -1 ||
+               lp.mDiscrollveScaleX ||
+               lp.mDiscrollveScaleY ||
+               (lp.mDiscrollveFromBgColor != -1 && lp.mDiscrollveToBgColor != -1);
+    }
+
+    @Override
+    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
+        return p instanceof LayoutParams;
+    }
+
+    @Override
+    protected LinearLayout.LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+    }
+
+    @Override
+    public LinearLayout.LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new LayoutParams(getContext(), attrs);
+    }
+
+    @Override
+    protected LinearLayout.LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
+        return new LayoutParams(p.width, p.height);
+    }
+
+    public static class LayoutParams extends LinearLayout.LayoutParams {
+
+        private int mDiscrollveFromBgColor;
+        private int mDiscrollveToBgColor;
+        private float mDiscrollveThreshold;
+        public boolean mDiscrollveAlpha;
+        public boolean mDiscrollveScaleX;
+        public boolean mDiscrollveScaleY;
+        private int mDiscrollveTranslation;
+
+        public LayoutParams(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DiscrollView_LayoutParams);
+            try {
+                mDiscrollveAlpha = a.getBoolean(R.styleable.DiscrollView_LayoutParams_discrollve_alpha, false);
+                mDiscrollveScaleX = a.getBoolean(R.styleable.DiscrollView_LayoutParams_discrollve_scaleX, false);
+                mDiscrollveScaleY = a.getBoolean(R.styleable.DiscrollView_LayoutParams_discrollve_scaleY, false);
+                mDiscrollveTranslation = a.getInt(R.styleable.DiscrollView_LayoutParams_discrollve_translation, -1);
+                mDiscrollveThreshold = a.getFloat(R.styleable.DiscrollView_LayoutParams_discrollve_threshold, 0.0f);
+                mDiscrollveFromBgColor = a.getColor(R.styleable.DiscrollView_LayoutParams_discrollve_fromBgColor, -1);
+                mDiscrollveToBgColor = a.getColor(R.styleable.DiscrollView_LayoutParams_discrollve_toBgColor, -1);
+            } finally {
+                a.recycle();
+            }
+        }
+
+        public LayoutParams(int w, int h) {
+            super(w, h);
+        }
+    }
+}
