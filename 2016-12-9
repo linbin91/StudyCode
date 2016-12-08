@@ -1,0 +1,43 @@
+1.滚动文字
+
+    BigDecimal
+
+    BigInteger
+
+    private String format(BigDecimal bd) {
+            String pattern;
+            if (isInt) {
+                pattern = "#,###";
+            } else {
+                pattern = "#,##0.00";
+            }
+            DecimalFormat df = new DecimalFormat(pattern);
+            return df.format(bd);
+        }
+
+        private void start() {
+                Log.e("linbin","BigDecimal(mNumStart) =" + new BigDecimal(mNumStart));
+                Log.e("linbin","new BigDecimal(mNumEnd) =" + new BigDecimal(mNumEnd));
+                ValueAnimator animator = ValueAnimator.ofObject(new BigDecimalEvaluator(), new BigDecimal(mNumStart), new BigDecimal(mNumEnd));
+                animator.setDuration(mDuration);
+                animator.setInterpolator(new AccelerateDecelerateInterpolator());
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        BigDecimal value = (BigDecimal) valueAnimator.getAnimatedValue();
+                        setText(mPrefixString + format(value) + mPostfixString);
+                    }
+                });
+                animator.start();
+            }
+
+             class BigDecimalEvaluator implements TypeEvaluator {
+                    @Override
+                    public Object evaluate(float fraction, Object startValue, Object endValue) {
+                        BigDecimal start = (BigDecimal) startValue;
+                        BigDecimal end = (BigDecimal) endValue;
+                        BigDecimal result = end.subtract(start);
+                        return result.multiply(new BigDecimal("" + fraction)).add(start);
+                    }
+                }
+            }
