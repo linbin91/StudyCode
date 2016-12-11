@@ -39,3 +39,6 @@ clipChild用来定义他的子控件是否要在他应有的边界内进行绘�
 
 3. 标题的伸缩
     利用一个空白的view添加到recyclerview中
+
+4. 两个相同层的module通信
+http://www.jianshu.com/p/3faa835de543
