@@ -1,0 +1,41 @@
+1. 动画的移动也要看下父容器够不够
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/margin_standard"
+            android:paddingLeft="@dimen/margin_standard"
+            android:paddingStart="@dimen/margin_standard">
+
+            <TextView
+                android:id="@+id/title"
+                android:text="hello world"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:minHeight="?attr/actionBarSize"
+                android:background="@color/accentLight"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+            <View
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/flexible_space_image_height"
+                android:background="@android:color/holo_red_dark" />
+        </LinearLayout>
+
+        ViewHelper.setTranslationY(title, 100);
+
+
+
+2. android:clipChildren="false"
+clipChild用来定义他的子控件是否要在他应有的边界内进行绘制。 默认情况下，clipChild被设置为true。 也就是不允许进行扩展绘制。
+解答了为什么scrollview 可以在margintop 中可以越界
+
+
+3. 标题的伸缩
+    利用一个空白的view添加到recyclerview中

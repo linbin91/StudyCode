@@ -1,0 +1,25 @@
+1. 给imageview 设置背景
+
+    private void updateBackground() {
+            StateListDrawable drawable = new StateListDrawable();
+            drawable.addState(new int[]{android.R.attr.state_pressed}, createDrawable(mColorPressed));
+            drawable.addState(new int[]{-android.R.attr.state_enabled}, createDrawable(mColorDisabled));
+            drawable.addState(new int[]{}, createDrawable(mColorNormal));
+            setBackgroundCompat(drawable);
+        }
+
+        private Drawable createDrawable(int color) {
+            OvalShape ovalShape = new OvalShape();
+            ShapeDrawable shapeDrawable = new ShapeDrawable(ovalShape);
+            shapeDrawable.getPaint().setColor(color);
+
+            if (mShadow && !hasLollipopApi()) {
+                Drawable shadowDrawable = getResources().getDrawable(mType == TYPE_NORMAL ? R.drawable.fab_shadow
+                        : R.drawable.fab_shadow_mini);
+                LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{shadowDrawable, shapeDrawable});
+                layerDrawable.setLayerInset(0, mShadowSize, mShadowSize, mShadowSize, mShadowSize);
+                return layerDrawable;
+            } else {
+                return shapeDrawable;
+            }
+        }
