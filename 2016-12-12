@@ -1,0 +1,34 @@
+1. Resource 方法解析
+
+    /返回的是资源文件名，如register_bg
+
+    String imgPath = getResources().getResourceEntryName(R.drawable.register_bg);
+
+    //返回的是包名+drawable/文件名，如：com.PhotoView.org:drawable/register_bg
+
+    String imgPath = getResources().getResourceName(R.drawable.register_bg);
+
+    //返回包名，如com.PhotoView.org
+
+    String imgPath = getResources().getResourcePackageName(R.drawable.register_bg);
+
+    //返回类型名称，如drawable
+
+    String imgPath = getResources().getResourceTypeName(R.drawable.register_bg);
+
+
+    对于换肤，网上都有示例，可以从别的皮肤安装包中读取所要的资源，
+    前提是你必须先持有这个资源的引用名称，像R.drawable.background（喂，这不是废话嘛）。
+    这个换肤的方案原理就是，自身应用的资源名称是R.drawable.background，
+    那皮肤包中应该也是这个名称，然后通过这个名称获取该资源在皮肤包中的具体id，代码：
+
+----------------------------------
+    //先获取本地资源引用名称，type name是R.drawable.background中的"drawable"，entry name是"background"
+    String resTypeName = getContext().getResources().getResourceTypeName(id);
+    String resEntryName = getContext().getResources().getResourceEntryName(id);
+    //然后创建皮肤包所在应用的Context
+    Context apk = getContext().createPackageContext(packageName,
+            Context.CONTEXT_IGNORE_SECURITY)
+    //然后就是获取皮肤包中的资源id了
+    int drawavleId = apk.getResources().getIdentifier(resEntryName, resTypeName,
+            apk.getPackageName());
