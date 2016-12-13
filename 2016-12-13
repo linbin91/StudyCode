@@ -1,0 +1,92 @@
+1. 静态内部类
+
+    静态内部类的实例方法不能访问外部类的实例成员，只能访问外部类的静态成员
+
+2. 策略模式
+    把具体的东西，交给子类
+    IHttpService ,  获取文本 获取图片， 获取音频
+
+3. AttributeSet attrs
+
+    String attrName = attrs.getAttributeName(i);
+    String attrValue = attrs.getAttributeValue(i);
+    Log.e("linbin","attrName =" + attrName  + "====" + "attrValue =" + attrValue);
+
+    attrName =layout_height====attrValue =-2
+
+4. Enum
+ public enum SkinAttrType {
+     BACKGROUD("background") {
+         @Override
+         public void apply(View view, String resName) {
+             Drawable drawable = getResourceManager().getDrawableByName(resName);
+             if (drawable == null) return;
+             view.setBackgroundDrawable(drawable);
+         }
+     }, COLOR("textColor") {
+         @Override
+         public void apply(View view, String resName) {
+             ColorStateList colorlist = getResourceManager().getColorStateList(resName);
+             if (colorlist == null) return;
+             ((TextView) view).setTextColor(colorlist);
+         }
+     }, SRC("src") {
+         @Override
+         public void apply(View view, String resName) {
+             if (view instanceof ImageView) {
+                 Drawable drawable = getResourceManager().getDrawableByName(resName);
+                 if (drawable == null) return;
+                 ((ImageView) view).setImageDrawable(drawable);
+             }
+
+         }
+     };
+
+     String attrType;
+
+     SkinAttrType(String attrType) {
+         this.attrType = attrType;
+     }
+
+     public String getAttrType() {
+         return attrType;
+     }
+
+
+     public abstract void apply(View view, String resName);
+
+     public ResourceManager getResourceManager() {
+         return SkinManager.getInstance().getResourceManager();
+     }
+
+ }
+
+
+ for (SkinAttrType attrType : SkinAttrType.values())
+        {
+            if (attrType.getAttrType().equals(attrName))
+                return attrType;
+        }
+
+SkinAttrType.values()： 枚举
+Log.e("linbin","SkinAttrType.BACKGROUD.name() =" + SkinAttrType.BACKGROUD.name());BACKGROUD
+
+
+5. 换插件的资源
+
+ assetManager = AssetManager.class.newInstance();
+                    Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class);
+                    addAssetPath.invoke(assetManager, mSkinPkgPath);
+
+                    File file = new File(mSkinPkgPath);
+                    L.e(file.exists()+"");
+                    Resources superRes = getResources();
+                    Resources mResources = new Resources(assetManager, superRes.getDisplayMetrics(), superRes.getConfiguration());
+
+                    int mainBgId = mResources.getIdentifier("skin_main_bg", "drawable", "com.zhy.plugin");
+                    findViewById(R.id.id_drawerLayout).setBackgroundDrawable(mResources.getDrawable(mainBgId));
+
+
+
+
+
